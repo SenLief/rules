@@ -1,0 +1,151 @@
+port: 7890
+socks-port: 7891
+#redir-port: 54321
+allow-lan: true
+# mixed-port: 7890
+# bind-address: "127.0.0.1"
+
+
+mode: rule
+
+log-level: info
+# log-level: silent
+
+external-ui: ./ui
+external-controller: 127.0.0.1:3030
+# secret: "509780"
+
+experimental:
+  ignore-resolve-fail: true 
+
+
+hosts:
+  '*.clash.dev': '127.0.0.1'
+dns:
+  enable: true
+  ipv6: false
+  # listen: 127.0.0.9:53
+  #redir-host # 或 fake-ip
+  enhanced-mode: redir-host
+
+  nameserver:
+     - 1.2.4.8
+     - 114.114.114.114
+     - 223.5.5.5
+     #- https://dns.rubyfish.cn/dns-query
+     
+  fallback: 
+     - tls://dns.rubyfish.cn:853
+     - tls://9.9.9.9:853
+tun:
+    enable: true
+    stack: gvisor
+    dns-hijack:
+      - 198.18.0.2:53
+    auto-route: true
+    auto-detect-interface: true # 自动检测出口网卡
+    
+proxies:
+  # Trojan
+  - name: BWG
+    type: trojan
+    server: proxy.senlief.eu.org
+    port: 443
+    password: h55dmhCRJqZmi3Bm
+    udp: true
+  - name: RN
+    type: trojan
+    server: c.senlief.eu.org
+    port: 443
+    password: h55dmhCRJqZmi3Bm
+    udp: true
+  - name: JH
+    type: trojan
+    server: b.senlief.eu.org
+    port: 443
+    password: zWjtQUpw
+    udp: true
+  - name: OCA
+    type: trojan
+    server: s.senlief.eu.org
+    port: 443
+    password: J86siiPUSdbE
+    udp: true
+# proxy provider start here
+# proxy-providers:
+#   Air:
+#     type: http
+#     path: ./online.d/air.yaml
+#     url: 'https://sub.6yearsok.xyz/sub?target=clash&url=https%3A%2F%2Frss.6yearsok.xyz%2Flink%2F9wJPGSRchwFiSfwj%3Fmu%3D2&insert=false&exclude=%E8%8A%82%E7%82%B9&emoji=true&list=true&tfo=false&scv=false&fdn=false&sort=false&new_name=true'
+#     interval: 3600
+#     health-check:
+#       enable: true
+#       url: http://www.gstatic.com/generate_204
+#       interval: 300
+# proxy provider end
+     
+proxy-groups:
+  - name: "use-proxy"
+    type: select
+    # use:
+    #   - Air
+    proxies:
+      - BWG
+      - OCA
+      - JH
+      - RN
+
+rule-providers:
+  #name of the provider
+  ad-block:
+    type: file
+    behavior: classical
+    path: ./online.d/ad.rule.yaml
+
+  lan:
+    type: file
+    behavior: classical
+    path: ./online.d/lan.rule.yaml
+
+  china:
+    type: file
+    behavior: classical
+    path: ./online.d/china.rule.yaml
+
+  private:
+    type: file
+    behavior: classical
+    path: ./online.d/private.rule.yaml
+
+  proxy:
+    type: file
+    behavior: classical
+    path: ./online.d/proxy.rule.yaml
+
+        
+rules:
+  - RULE-SET,ad-block,REJECT
+  - RULE-SET,china,DIRECT
+  - RULE-SET,lan,DIRECT
+  - RULE-SET,private,DIRECT
+  - RULE-SET,proxy,use-proxy
+  
+  # Apple
+  - DOMAIN-SUFFIX,apps.apple.com,use-proxy
+  - DOMAIN-SUFFIX,music.apple.com,DIRECT
+  - DOMAIN-SUFFIX,icloud.com,DIRECT
+  - DOMAIN-SUFFIX,icloud-content.com,DIRECT
+  - DOMAIN-SUFFIX,me.com,DIRECT
+  - DOMAIN-SUFFIX,mzstatic.com,DIRECT
+  - DOMAIN-SUFFIX,akadns.net,DIRECT
+  - DOMAIN-SUFFIX,aaplimg.com,DIRECT
+  - DOMAIN-SUFFIX,cdn-apple.com,DIRECT
+  - DOMAIN-SUFFIX,apple.com,DIRECT
+  - DOMAIN-SUFFIX,apple-cloudkit.com,DIRECT
+  - DOMAIN,hls.itunes.apple.com,use-proxy
+   
+
+  # 最终规则
+  - GEOIP,CN,DIRECT
+  - MATCH,use-proxy
+  
